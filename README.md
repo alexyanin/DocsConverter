@@ -1,1 +1,2 @@
 # DocsConverter
+The web service is implemented in DocsConverter.WebApi project. It uses "onion" architecture. The WebApi layer is connecting with other layes through interfaces. So it possible to grow/change other layers without changing the WebApi code.

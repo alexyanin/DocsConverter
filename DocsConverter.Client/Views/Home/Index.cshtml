@@ -1,0 +1,101 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h3>Convert Html file to Pdf</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 text-right">
+        Select Html file
+    </div>
+    <div class="col-md-2">
+        <input type="file" />
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-offset-3 col-md-2" >
+        <a class="btn btn-default" style="width: 100%;  margin: 10px 0px;" onclick="startConvertHtmlFile()">Convert</a>
+    </div>
+</div>
+<div class="row">
+    <div id="messageBox" class="col-md-3 text-right">
+    </div>
+    <div id="loading" class="col-md-2" style="display: none;">
+        <img style="width: 20px;" src="~/Content/img/loading.gif" />
+    </div>
+    <div class="col-md-2" id="download" style="display: none;">
+        <a class="btn btn-default" onclick="startDownload()">Download</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var fileName = "";
+    var isChecking = false;
+
+    function startConvertHtmlFile() {
+
+        $("#download").hide();
+        $("#loading").show();
+
+        fileName = $("input[type='file']").get(0).files[0].name;
+
+        $("#messageBox").text("Converting is started");
+
+        var formData = new FormData();
+        formData.append("myfile", $("input[type='file']").get(0).files[0]);
+        isChecking = true;
+        $.ajax({
+            url: "/webapi/api/convert",
+            data: formData,
+            contentType: false,
+            processData: false,
+            type: "post"
+        })
+        .then(function (result) {
+            $("#download").show();
+            $("#loading").hide();
+            $("#messageBox").text("Ready for download");
+            isChecking = false;
+            fileName = "";
+        })
+        .fail(function (xhr, data, i) {
+            //isChecking = false;
+            console.log(data);
+            $("#loading").hide()
+            $("#messageBox").text("Something went wrong. Please try again");
+        });
+
+        checkFileIsReady();
+    };
+
+    function checkFileIsReady() {
+
+        $.ajax({
+            url: "/webapi/api/convert/CheckIsReady?filename=" + fileName,
+            type: "get"
+        })
+            .then(function (result) {
+                if (!result && isChecking && fileName != "") {
+                setTimeout(function () { checkFileIsReady() }, 3000);
+            }
+            else {
+                $("#download").show();
+                $("#loading").hide();
+                $("#messageBox").text("Ready for download");
+            }
+        })
+            .fail(function (xhr, data, i) {
+                console.log(data);
+        });
+    }
+
+    function startDownload() {
+        location.href = "/webapi/api/convert/DownloadPdfFile?srcFileName=" + fileName;
+    }
+
+</script>
